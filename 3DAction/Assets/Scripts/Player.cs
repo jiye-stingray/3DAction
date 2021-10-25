@@ -6,21 +6,29 @@ public class Player : MonoBehaviour
 {
     [Header("PlayerMove")]
     //가로세로 입력 받는 함수
-    [SerializeField]
     float hAxis;
-    [SerializeField]
     float vAxis;
     Vector3 moveVec;
+
+
     Vector3 dodgeVec;   //회피도중 방향 전화 놉
+
     [SerializeField]
     float speed;
+    public GameObject[] weapons;
+    public bool[] hasWeapons;
+
     bool wDown;     //shift 키 인식
     bool jDown;     //점프
+    bool iDown;     //상호작용
+
     bool isjump;
     bool isDodge;
 
     Rigidbody rigid;
     Animator anim;
+
+    GameObject nearObj; //트리거된 아이템을 저장
     void Awake()
     {
         anim = GetComponentInChildren<Animator>();
@@ -36,7 +44,7 @@ public class Player : MonoBehaviour
         Turn();
         Jump();
         Dodge();
-
+        Iteraction();
 
     }
 
@@ -46,6 +54,7 @@ public class Player : MonoBehaviour
         vAxis = Input.GetAxisRaw("Vertical");
         wDown = Input.GetButton("Walk");
         jDown = Input.GetButtonDown("Jump");
+        iDown = Input.GetButtonDown("Iteraction");
     }
 
     void Move()
@@ -99,6 +108,25 @@ public class Player : MonoBehaviour
         speed *= 0.5f;
         isDodge = false;
     }
+
+    void Iteraction()
+    {
+        //상호작용 함수가 작동될 수 있는 조건
+
+        if (iDown && nearObj != null && !isjump && !isDodge)
+        {
+            if (nearObj.tag == "Weapon")
+            {
+                Item item = nearObj.GetComponent<Item>();
+                int weaponIndex = item.value;
+                hasWeapons[weaponIndex] = true;
+
+                Destroy(nearObj);
+
+
+            }
+        }
+    }
     void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.tag == "Floor")
@@ -107,5 +135,19 @@ public class Player : MonoBehaviour
 
             isjump = false;
         }
+    }
+
+    void OnTriggerStay(Collider other)
+    {
+        if (other.tag == "Weapon")
+            nearObj = other.gameObject;
+
+        Debug.Log(nearObj.name);
+    }
+
+    void OnTriggerExit(Collider other)
+    {
+        if (other.tag == "Weapon")
+            nearObj = null;
     }
 }
