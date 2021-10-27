@@ -22,13 +22,21 @@ public class Player : MonoBehaviour
     bool jDown;     //점프
     bool iDown;     //상호작용
 
+    //아이템 교체 키
+    bool sDown1;
+    bool sDown2;
+    bool sDown3;
+
     bool isjump;
     bool isDodge;
+    bool isSwap;
 
     Rigidbody rigid;
     Animator anim;
 
     GameObject nearObj; //트리거된 아이템을 저장
+    GameObject equipWeapon; //기존에 장착된 변수
+    int equipWeaponIndex = -1;   
     void Awake()
     {
         anim = GetComponentInChildren<Animator>();
@@ -45,6 +53,7 @@ public class Player : MonoBehaviour
         Jump();
         Dodge();
         Iteraction();
+        Swap();
 
     }
 
@@ -55,6 +64,9 @@ public class Player : MonoBehaviour
         wDown = Input.GetButton("Walk");
         jDown = Input.GetButtonDown("Jump");
         iDown = Input.GetButtonDown("Iteraction");
+        sDown1 = Input.GetButtonDown("Swap1");
+        sDown2 = Input.GetButtonDown("Swap2");
+        sDown3 = Input.GetButtonDown("Swap3");
     }
 
     void Move()
@@ -62,10 +74,11 @@ public class Player : MonoBehaviour
         moveVec = new Vector3(hAxis, 0, vAxis).normalized; //normalized : 방향값이 1로 고정된 Vector
 
         if (isDodge)
-        {
             //회피중에는 움직임 -> 회피 백터로 전환
             moveVec = dodgeVec;
-        }
+        if (isSwap)
+            moveVec = Vector3.zero;
+        
 
         transform.position += moveVec * speed * (wDown ? 0.3f : 1f) * Time.deltaTime;
 
@@ -92,7 +105,7 @@ public class Player : MonoBehaviour
 
     void Dodge()
     {
-        if (jDown && moveVec != Vector3.zero && !isjump && !isDodge)
+        if (jDown && moveVec != Vector3.zero && !isjump && !isDodge &&!isSwap)
         {
             dodgeVec = moveVec;
             speed *= 2;
@@ -107,6 +120,45 @@ public class Player : MonoBehaviour
     {
         speed *= 0.5f;
         isDodge = false;
+    }
+
+    void Swap()
+    {
+        //무기 중복 교체 없는 무기 확인을 위한 조건 추가
+        if (sDown1 && (!hasWeapons[0] || equipWeaponIndex == 0))
+            return;
+        if (sDown2 && (!hasWeapons[1] || equipWeaponIndex == 1))
+            return;
+        if (sDown3 && (!hasWeapons[2] || equipWeaponIndex == 2))
+            return;
+
+        int weaponIndex = -1;
+        if (sDown1) weaponIndex = 0;
+        if (sDown2) weaponIndex = 1;
+        if (sDown3) weaponIndex = 2;
+
+        if((sDown1 || sDown2 || sDown3) &&!isDodge &&!isjump)
+        {
+            //빈손일 경우는 생각하여 조건 추가하기
+            if (equipWeapon != null)
+                equipWeapon.SetActive(false);
+
+            equipWeaponIndex = weaponIndex;
+            equipWeapon = weapons[weaponIndex];
+            equipWeapon.SetActive(true);
+
+            anim.SetTrigger("doSwap");
+
+            isSwap = true;
+
+            Invoke("SwapOut", 0.4f);
+            
+        }
+    }
+
+    void SwapOut()
+    {
+        isSwap = false;
     }
 
     void Iteraction()
@@ -127,6 +179,8 @@ public class Player : MonoBehaviour
             }
         }
     }
+
+
     void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.tag == "Floor")
