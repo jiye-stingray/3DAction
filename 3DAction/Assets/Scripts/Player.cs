@@ -9,14 +9,22 @@ public class Player : MonoBehaviour
     float hAxis;
     float vAxis;
     Vector3 moveVec;
-
-
     Vector3 dodgeVec;   //회피도중 방향 전화 놉
 
     [SerializeField]
     float speed;
     public GameObject[] weapons;
     public bool[] hasWeapons;
+    public GameObject[] grenadas;   //공전하는 물체(수류탄)를 컨트롤하기위해서 배열 변수 생성
+
+    public int ammo;
+    public int coin;
+    public int health;
+    public int hasGrenades;
+    public int maxAmmo;
+    public int maxCoin;
+    public int maxHealth;
+    public int maxHasGrenades;
 
     bool wDown;     //shift 키 인식
     bool jDown;     //점프
@@ -37,6 +45,7 @@ public class Player : MonoBehaviour
     GameObject nearObj; //트리거된 아이템을 저장
     GameObject equipWeapon; //기존에 장착된 변수
     int equipWeaponIndex = -1;   
+
     void Awake()
     {
         anim = GetComponentInChildren<Animator>();
@@ -190,13 +199,46 @@ public class Player : MonoBehaviour
             isjump = false;
         }
     }
+    void OnTriggerEnter(Collider other)
+    {
+        if(other.tag == "Item")
+        {
+            Item item = other.GetComponent<Item>();
+            switch (item.type)
+            {
+                case Item.Type.Ammo:
+                    this.ammo += item.value;
+                    if (ammo > maxAmmo)
+                        ammo = maxAmmo;
+                    break;
+                case Item.Type.Coin:
+                    this.coin += item.value;
+                    if (coin > maxCoin)
+                        coin = maxCoin;
+                    break;
+                case Item.Type.Grenade:
+                    this.hasGrenades += item.value;
+                    if (hasGrenades > maxHasGrenades)
+                        hasGrenades = maxHasGrenades;
+                    break;
+                case Item.Type.Heart:
+                    this.health += item.value;
+                    if (health > maxHealth)
+                        health = maxHealth;
+                    break;
+              
+                default:
+                    break;
+            }
+            Destroy(other.gameObject);
+        }
+    }
 
     void OnTriggerStay(Collider other)
     {
         if (other.tag == "Weapon")
             nearObj = other.gameObject;
 
-        Debug.Log(nearObj.name);
     }
 
     void OnTriggerExit(Collider other)
