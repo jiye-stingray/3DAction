@@ -16,6 +16,7 @@ public class Player : MonoBehaviour
     public GameObject[] weapons;
     public bool[] hasWeapons;
     public GameObject[] grenadas;   //공전하는 물체(수류탄)를 컨트롤하기위해서 배열 변수 생성
+    public int hasgrenadas;
 
     public int ammo;
     public int coin;
@@ -217,9 +218,11 @@ public class Player : MonoBehaviour
                         coin = maxCoin;
                     break;
                 case Item.Type.Grenade:
-                    this.hasGrenades += item.value;
-                    if (hasGrenades > maxHasGrenades)
-                        hasGrenades = maxHasGrenades;
+
+                    if (hasGrenades == maxHasGrenades)
+                        return;
+                    grenadas[hasGrenades].SetActive(true);
+                    hasGrenades += item.value;
                     break;
                 case Item.Type.Heart:
                     this.health += item.value;
