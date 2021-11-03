@@ -30,6 +30,7 @@ public class Player : MonoBehaviour
     bool wDown;     //shift 키 인식
     bool jDown;     //점프
     bool iDown;     //상호작용
+    bool fDown;     //공격키 입력
 
     //아이템 교체 키
     bool sDown1;
@@ -39,13 +40,15 @@ public class Player : MonoBehaviour
     bool isjump;
     bool isDodge;
     bool isSwap;
+    bool isFireReady = true;
 
     Rigidbody rigid;
     Animator anim;
 
     GameObject nearObj; //트리거된 아이템을 저장
-    GameObject equipWeapon; //기존에 장착된 변수
-    int equipWeaponIndex = -1;   
+    Weapon equipWeapon; //기존에 장착된 변수
+    int equipWeaponIndex = -1;
+    float fireDelay;
 
     void Awake()
     {
@@ -61,6 +64,7 @@ public class Player : MonoBehaviour
         Move();
         Turn();
         Jump();
+        Attack();
         Dodge();
         Iteraction();
         Swap();
@@ -73,6 +77,7 @@ public class Player : MonoBehaviour
         vAxis = Input.GetAxisRaw("Vertical");
         wDown = Input.GetButton("Walk");
         jDown = Input.GetButtonDown("Jump");
+        fDown = Input.GetButtonDown("Fire1");
         iDown = Input.GetButtonDown("Iteraction");
         sDown1 = Input.GetButtonDown("Swap1");
         sDown2 = Input.GetButtonDown("Swap2");
@@ -86,7 +91,7 @@ public class Player : MonoBehaviour
         if (isDodge)
             //회피중에는 움직임 -> 회피 백터로 전환
             moveVec = dodgeVec;
-        if (isSwap)
+        if (isSwap || !isFireReady)
             moveVec = Vector3.zero;
         
 
@@ -110,6 +115,22 @@ public class Player : MonoBehaviour
             anim.SetBool("isJump", true);
             anim.SetTrigger("doJump");
             isjump = true;
+        }
+    }
+
+    void Attack()
+    {
+        if (equipWeapon == null)
+            return;
+
+        fireDelay += Time.deltaTime;
+        isFireReady = equipWeapon.rate < fireDelay;     //공격딜레이에 시간을 더해주고 공격가능 여부를 확인
+
+        if(fDown && isFireReady && !isDodge && !isSwap)
+        {
+            equipWeapon.Use();
+            anim.SetTrigger("doSwing");
+            fireDelay = 0;
         }
     }
 
@@ -151,11 +172,11 @@ public class Player : MonoBehaviour
         {
             //빈손일 경우는 생각하여 조건 추가하기
             if (equipWeapon != null)
-                equipWeapon.SetActive(false);
+                equipWeapon.gameObject.SetActive(false);
 
             equipWeaponIndex = weaponIndex;
-            equipWeapon = weapons[weaponIndex];
-            equipWeapon.SetActive(true);
+            equipWeapon = weapons[weaponIndex].GetComponent<Weapon>();
+            equipWeapon.gameObject.SetActive(true);
 
             anim.SetTrigger("doSwap");
 
