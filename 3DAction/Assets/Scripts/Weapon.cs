@@ -8,8 +8,13 @@ public class Weapon : MonoBehaviour
     public Type type;
     public int damage;
     public float rate;      //∞¯º”
+    
+    public int maxAmmo;     //¿¸√º ≈∫æ‡
+    public int curAmmo;     //«ˆ¡¶ ≈∫æ‡
+
     public BoxCollider melleArea;   //π¸¿ß
     public TrailRenderer trailEffect;   //»÷µŒ∏¶ ∂ß »ø∞˙ 
+
     //√—æÀ, ≈∫«« ∞¸∑√ ∫Øºˆ ª˝º∫
     public Transform bulletPos;
     public GameObject bullet;
@@ -23,8 +28,9 @@ public class Weapon : MonoBehaviour
             StopCoroutine("Swing");
             StartCoroutine("Swing");
         }
-        else if(type == Type.Range)
+        else if(type == Type.Range && curAmmo > 0)
         {
+            curAmmo--;
             StartCoroutine("Shot");
         }
     }
@@ -47,7 +53,7 @@ public class Weapon : MonoBehaviour
         //#1. √—æÀ πﬂªÁ
         GameObject intantBullet = Instantiate(bullet, bulletPos.position, bulletPos.rotation);
         Rigidbody bulletRigid = intantBullet.GetComponent<Rigidbody>();
-        bulletRigid.velocity = bulletPos.forward * 50;
+        bulletRigid.velocity = bulletPos.forward * 100;
         yield return null;
         //#2. ≈∫«« πË√‚
         GameObject intantCase = Instantiate(bulletCase, bulletCasePos.position, bulletCasePos.rotation);

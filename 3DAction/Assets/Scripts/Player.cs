@@ -31,16 +31,20 @@ public class Player : MonoBehaviour
     bool jDown;     //점프
     bool iDown;     //상호작용
     bool fDown;     //공격키 입력
+    bool rDown;     //재장전
 
     //아이템 교체 키
     bool sDown1;
     bool sDown2;
     bool sDown3;
 
+
+
     bool isjump;
     bool isDodge;
     bool isSwap;
     bool isFireReady = true;
+    bool isReload;
 
     Rigidbody rigid;
     Animator anim;
@@ -65,6 +69,7 @@ public class Player : MonoBehaviour
         Turn();
         Jump();
         Attack();
+        Reload();
         Dodge();
         Iteraction();
         Swap();
@@ -78,6 +83,7 @@ public class Player : MonoBehaviour
         wDown = Input.GetButton("Walk");
         jDown = Input.GetButtonDown("Jump");
         fDown = Input.GetButton("Fire1");
+        rDown = Input.GetButtonDown("Reload");
         iDown = Input.GetButtonDown("Iteraction");
         sDown1 = Input.GetButtonDown("Swap1");
         sDown2 = Input.GetButtonDown("Swap2");
@@ -91,7 +97,7 @@ public class Player : MonoBehaviour
         if (isDodge)
             //회피중에는 움직임 -> 회피 백터로 전환
             moveVec = dodgeVec;
-        if (isSwap || !isFireReady)
+        if (isSwap || isReload || !isFireReady )
             moveVec = Vector3.zero;
         
 
@@ -133,6 +139,34 @@ public class Player : MonoBehaviour
             fireDelay = 0;
         }
 
+    }
+
+    void Reload()
+    { 
+        if (equipWeapon == null)
+            return;
+
+        if (equipWeapon.type == Weapon.Type.Melee)
+            return;
+
+        if (ammo == 0)
+            return;
+        if (rDown && !isjump && !isDodge &&!isSwap && isFireReady)
+        {
+            Debug.Log("실행");
+            anim.SetTrigger("doReload");
+            isReload = true;
+            Invoke("ReloadOut", 3f);
+        }
+    }
+
+    void ReloadOut()
+    {
+        int reammo = ammo < equipWeapon.maxAmmo ? ammo : equipWeapon.maxAmmo;   //플레이어가 소지한 탄을 고려해서 계산하기
+        equipWeapon.curAmmo = reammo;
+        ammo -= reammo;
+
+        isReload = false;
     }
 
     void Dodge()
